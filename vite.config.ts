@@ -5,7 +5,7 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { optimizeCssModules } from 'vite-plugin-optimize-css-modules';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-export default defineConfig((config) => {
+export default defineConfig(({ command, mode }) => {
   return {
     build: {
       target: 'esnext',
@@ -14,7 +14,10 @@ export default defineConfig((config) => {
       nodePolyfills({
         include: ['path', 'buffer'],
       }),
-      config.mode !== 'test' && remixCloudflareDevProxy(),
+      // ИСПРАВЛЕНИЕ: прокси включается только в режиме разработки (serve), 
+      // но не при сборке (build) и не в тестах.
+      command === 'serve' && mode !== 'test' && remixCloudflareDevProxy(),
+      
       remixVitePlugin({
         future: {
           v3_fetcherPersist: true,
@@ -25,7 +28,7 @@ export default defineConfig((config) => {
       UnoCSS(),
       tsconfigPaths(),
       chrome129IssuePlugin(),
-      config.mode === 'production' && optimizeCssModules({ apply: 'build' }),
+      mode === 'production' && optimizeCssModules({ apply: 'build' }),
     ],
   };
 });
